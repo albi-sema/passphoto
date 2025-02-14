@@ -69,13 +69,14 @@ def crop_head_and_shoulders(image, face, target_ratio=(4, 5)):
 
     return cropped_image
 
-def generate_biometric_photo_from_file(file_path, kernel_size, blur_kernel_size, fade_distance=20):
+def generate_biometric_photo_from_file(file_path, kernel_size, blur_kernel_size, photo_format="us", fade_distance=20):
     """
     Process an image file to generate a biometric photo.
     :param file_path: Path to the input image file.
     :param kernel_size: Size of the kernel for erosion and dilation.
     :param blur_kernel_size: Size of the kernel for Gaussian blur.
     :param fade_distance: Distance over which the fade effect is applied.
+    :param photo_format: The desired photo format, e.g., 'us' or 'germany'.
     :return: Path to the processed biometric photo.
     """
     try:
@@ -202,8 +203,10 @@ def generate_biometric_photo():
         file.save(file_path)
 
         try:
-            # Generate the biometric photo using the kernel size
-            processed_file_path = generate_biometric_photo_from_file(file_path, kernel_size, blur_kernel_size)
+            # Retrieve the photo format from the form data (default to 'us' if not specified)
+            photo_format = request.form.get('photoFormat', default='us')
+            # Generate the biometric photo using the kernel size and photo format settings
+            processed_file_path = generate_biometric_photo_from_file(file_path, kernel_size, blur_kernel_size, photo_format)
 
             # Return the URL of the processed image
             processed_filename = os.path.basename(processed_file_path)
