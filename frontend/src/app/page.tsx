@@ -78,6 +78,16 @@ export default function Home() {
 
   return (
     <div className="min-h-screen p-8 pb-20 gap-16 sm:p-20 bg-gray-100 text-black">
+      {/* About Section */}
+      <section className="mb-8">
+        <h1 className="text-4xl font-bold mb-4">Welcome to Passphoto</h1>
+        <p className="text-lg">
+          Passphoto helps you transform a standard portrait photo into a biometric photo suitable for
+          passports and official IDs. Upload a photo, adjust the mask size, and get a processed image
+          that meets official guidelines – all in one click!
+        </p>
+      </section>
+
       <div className="container mx-auto">
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div
