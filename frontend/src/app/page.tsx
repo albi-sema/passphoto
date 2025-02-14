@@ -25,6 +25,93 @@ export default function Home() {
   // New state for storing the captured webcam photo URL
   const [capturedPhotoUrl, setCapturedPhotoUrl] = useState("");
 
+  // New state for language and translations (default set to browser language if supported)
+  const browserLang = typeof navigator !== 'undefined' ? navigator.language.slice(0,2) : "en";
+  const defaultLang = ["en", "de", "it", "es"].includes(browserLang) ? browserLang : "en";
+  const [language, setLanguage] = useState(defaultLang);
+  const translations = {
+    en: {
+      title: "Welcome to Passphoto",
+      description:
+        "Passphoto helps you transform a standard portrait photo into a biometric photo suitable for passports and official IDs. Upload a photo, adjust the mask size, and get a processed image that meets official guidelines – all in one click!",
+      dragAndDrop: "Drag and drop an image here or click to browse",
+      uploadButton: "Upload Photo",
+      webcamButton: "Use Webcam",
+      captureButton: "Capture Photo",
+      stopButton: "Stop Webcam",
+      generateButton: "Generate Biometric Photo",
+      processing: "Processing...",
+      resultsTitle: "Results",
+      originalPhoto: "Original Photo",
+      downloadOriginal: "Download Original",
+      biometricPhoto: "Biometric Photo",
+      downloadBiometric: "Download Biometric",
+      updateButton: "Update Biometric Photo",
+      backButton: "Back to Upload",
+      maskSizeLabel: "Mask Size:"
+    },
+    de: {
+      title: "Willkommen bei Passphoto",
+      description:
+        "Passphoto hilft Ihnen, ein Standardporträtfoto in ein biometrisches Foto umzuwandeln, das für Pässe und offizielle Ausweise geeignet ist. Laden Sie ein Foto hoch, passen Sie die Maskengröße an und erhalten Sie ein verarbeitetes Bild, das die offiziellen Richtlinien erfüllt – alles mit nur einem Klick!",
+      dragAndDrop: "Ziehen Sie ein Bild hierher oder klicken Sie, um zu durchsuchen",
+      uploadButton: "Foto hochladen",
+      webcamButton: "Webcam verwenden",
+      captureButton: "Foto aufnehmen",
+      stopButton: "Webcam stoppen",
+      generateButton: "Biometrisches Foto erstellen",
+      processing: "Verarbeite...",
+      resultsTitle: "Ergebnisse",
+      originalPhoto: "Originalfoto",
+      downloadOriginal: "Original herunterladen",
+      biometricPhoto: "Biometrisches Foto",
+      downloadBiometric: "Biometrisches Foto herunterladen",
+      updateButton: "Biometrisches Foto aktualisieren",
+      backButton: "Zurück zum Hochladen",
+      maskSizeLabel: "Maskengröße:"
+    },
+    it: {
+      title: "Benvenuto in Passphoto",
+      description:
+        "Passphoto ti aiuta a trasformare una foto standard in una foto biometrica adatta per passaporti e carte d'identità. Carica una foto, regola la dimensione della maschera e ottieni un'immagine processata che soddisfa le linee guida ufficiali – tutto in un solo clic!",
+      dragAndDrop: "Trascina e rilascia un'immagine qui o clicca per cercare",
+      uploadButton: "Carica foto",
+      webcamButton: "Usa Webcam",
+      captureButton: "Scatta foto",
+      stopButton: "Ferma Webcam",
+      generateButton: "Genera Foto Biometrica",
+      processing: "Elaborazione in corso...",
+      resultsTitle: "Risultati",
+      originalPhoto: "Foto Originale",
+      downloadOriginal: "Scarica Originale",
+      biometricPhoto: "Foto Biometrica",
+      downloadBiometric: "Scarica Foto Biometrica",
+      updateButton: "Aggiorna Foto Biometrica",
+      backButton: "Torna al caricamento",
+      maskSizeLabel: "Dimensione della maschera:"
+    },
+    es: {
+      title: "Bienvenido a Passphoto",
+      description:
+        "Passphoto te ayuda a transformar una foto estándar en una foto biométrica adecuada para pasaportes y documentos de identidad. Sube una foto, ajusta el tamaño de la máscara y obtén una imagen procesada que cumpla con las directrices oficiales – todo en un clic!",
+      dragAndDrop: "Arrastra y suelta una imagen aquí o haz clic para buscar",
+      uploadButton: "Subir foto",
+      webcamButton: "Usar Webcam",
+      captureButton: "Capturar foto",
+      stopButton: "Detener Webcam",
+      generateButton: "Generar Foto Biométrica",
+      processing: "Procesando...",
+      resultsTitle: "Resultados",
+      originalPhoto: "Foto Original",
+      downloadOriginal: "Descargar Foto Original",
+      biometricPhoto: "Foto Biométrica",
+      downloadBiometric: "Descargar Foto Biométrica",
+      updateButton: "Actualizar Foto Biométrica",
+      backButton: "Volver a cargar",
+      maskSizeLabel: "Tamaño de la máscara:"
+    }
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setFile(e.target.files[0]);
@@ -167,15 +254,30 @@ export default function Home() {
         <title>free pass photo</title>
       </Head>
       <div className="min-h-screen flex bg-white text-black">
-        <div className="hidden md:flex w-1/6 items-center justify-center bg-gray-200"></div>
+        <div className="hidden md:flex w-1/6 bg-gray-200"></div>
         <div className="flex-1 p-8 pb-20 gap-16 sm:p-20">
+          {/* Language Selector on top right of Info Section */}
+          <div className="flex justify-end mb-4">
+            <div className="flex items-center">
+              <span className="mr-2 text-2xl">🌐</span>
+              <select
+                value={language}
+                onChange={(e) => setLanguage(e.target.value)}
+                className="p-1 border rounded"
+              >
+                <option value="en">EN</option>
+                <option value="de">DE</option>
+                <option value="it">IT</option>
+                <option value="es">ES</option>
+              </select>
+            </div>
+          </div>
+
           {/* About Section */}
           <section className="mb-8 text-center">
-            <h1 className="text-4xl font-bold mb-4">Welcome to Passphoto</h1>
+            <h1 className="text-4xl font-bold mb-4">{translations[language].title}</h1>
             <p className="text-lg">
-              Passphoto helps you transform a standard portrait photo into a biometric photo suitable for
-              passports and official IDs. Upload a photo, adjust the mask size, and get a processed image
-              that meets official guidelines – all in one click!
+              {translations[language].description}
             </p>
           </section>
           <div className="my-8 flex justify-center">
@@ -192,7 +294,7 @@ export default function Home() {
                     useWebcam ? "bg-gray-300" : "bg-blue-500 text-white"
                   }`}
                 >
-                  Upload Photo
+                  {translations[language].uploadButton}
                 </button>
                 <button
                   onClick={() => setUseWebcam(true)}
@@ -200,7 +302,7 @@ export default function Home() {
                     useWebcam ? "bg-blue-500 text-white" : "bg-gray-300"
                   }`}
                 >
-                  Use Webcam
+                  {translations[language].webcamButton}
                 </button>
               </div>
               {useWebcam ? (
@@ -217,13 +319,13 @@ export default function Home() {
                         onClick={capturePhoto}
                         className="bg-green-500 text-white px-4 py-2 rounded"
                       >
-                        Capture Photo
+                        {translations[language].captureButton}
                       </button>
                       <button
                         onClick={stopWebcam}
                         className="bg-red-500 text-white px-4 py-2 rounded"
                       >
-                        Stop Webcam
+                        {translations[language].stopButton}
                       </button>
                     </div>
                   </div>
@@ -252,7 +354,7 @@ export default function Home() {
                     {file ? (
                       <p>{file.name}</p>
                     ) : (
-                      <p>Drag and drop an image here or click to browse</p>
+                      <p>{translations[language].dragAndDrop}</p>
                     )}
                   </div>
                   <input
@@ -264,7 +366,8 @@ export default function Home() {
                   />
                 </>
               )}
-              <div className="mt-4 flex items-center gap-4">
+              <div className="hidden mt-4 flex items-center gap-4">
+                {/* Photo Format dropdown hidden for the moment */}
                 <label htmlFor="photoFormat">Photo Format:</label>
                 <select
                   id="photoFormat"
@@ -283,7 +386,7 @@ export default function Home() {
                   disabled={loading}
                   onClick={handleSubmit}
                 >
-                  {loading ? "Processing..." : "Generate Biometric Photo"}
+                  {loading ? translations[language].processing : translations[language].generateButton}
                 </button>
               </div>
             </>
@@ -291,11 +394,11 @@ export default function Home() {
 
           {viewMode === "results" && (
             <div className="container mx-auto">
-              <h2 className="text-2xl font-bold text-center mb-4">Results</h2>
+              <h2 className="text-2xl font-bold text-center mb-4">{translations[language].resultsTitle}</h2>
               <div className="flex flex-col md:flex-row gap-8 justify-center">
                 {originalPhotoUrl && (
                   <div className="text-center">
-                    <h3 className="font-semibold mb-2">Original Photo</h3>
+                    <h3 className="font-semibold mb-2">{translations[language].originalPhoto}</h3>
                     <img
                       src={originalPhotoUrl}
                       alt="Original Photo"
@@ -307,13 +410,13 @@ export default function Home() {
                         downloadImage(originalPhotoUrl, "original_photo.jpg")
                       }
                     >
-                      Download Original
+                      {translations[language].downloadOriginal}
                     </button>
                   </div>
                 )}
                 {biometricPhotoUrl && (
                   <div className="text-center">
-                    <h3 className="font-semibold mb-2">Biometric Photo</h3>
+                    <h3 className="font-semibold mb-2">{translations[language].biometricPhoto}</h3>
                     <img
                       src={biometricPhotoUrl}
                       alt="Biometric Photo"
@@ -325,13 +428,13 @@ export default function Home() {
                         downloadImage(biometricPhotoUrl, "biometric_photo.jpg")
                       }
                     >
-                      Download Biometric
+                      {translations[language].downloadBiometric}
                     </button>
                   </div>
                 )}
               </div>
               <div className="mt-4 flex items-center gap-4">
-                <label htmlFor="kernelSize">Mask Size:</label>
+                <label htmlFor="kernelSize">{translations[language].maskSizeLabel}</label>
                 <input
                   id="kernelSize"
                   type="range"
@@ -349,7 +452,7 @@ export default function Home() {
                   disabled={loading}
                   onClick={handleSubmit}
                 >
-                  {loading ? "Processing..." : "Update Biometric Photo"}
+                  {loading ? translations[language].processing : translations[language].updateButton}
                 </button>
               </div>
               <div className="mt-4">
@@ -357,7 +460,7 @@ export default function Home() {
                   onClick={() => setViewMode("upload")}
                   className="bg-gray-500 text-white p-2 rounded"
                 >
-                  Back to Upload
+                  {translations[language].backButton}
                 </button>
               </div>
             </div>
@@ -367,7 +470,7 @@ export default function Home() {
           {errorMsg && <p className="text-red-600 mt-4">{errorMsg}</p>}
           {statusMessage && <p className="text-green-600 mt-4">{statusMessage}</p>}
         </div>
-        <div className="hidden md:flex w-1/6 items-center justify-center bg-gray-200"></div>
+        <div className="hidden md:flex w-1/6 bg-gray-200"></div>
       </div>
     </>
   );
