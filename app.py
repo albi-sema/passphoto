@@ -69,10 +69,13 @@ def crop_head_and_shoulders(image, face, target_ratio=(4, 5)):
 
     return cropped_image
 
-def generate_biometric_photo_from_file(file_path):
+def generate_biometric_photo_from_file(file_path, kernel_size, blur_kernel_size, fade_distance=20):
     """
     Process an image file to generate a biometric photo.
     :param file_path: Path to the input image file.
+    :param kernel_size: Size of the kernel for erosion and dilation.
+    :param blur_kernel_size: Size of the kernel for Gaussian blur.
+    :param fade_distance: Distance over which the fade effect is applied.
     :return: Path to the processed biometric photo.
     """
     try:
@@ -99,12 +102,22 @@ def generate_biometric_photo_from_file(file_path):
         print("Cropping head and shoulders...")
         cropped_image = crop_head_and_shoulders(image, face, target_ratio=(4, 5))
 
-        # Convert the cropped image to RGB (MediaPipe requires RGB input)
-        cropped_image_rgb = cv2.cvtColor(cropped_image, cv2.COLOR_BGR2RGB)
+        # Load the super-resolution model
+        print("Loading super-resolution model...")
+        sr = cv2.dnn_superres.DnnSuperResImpl_create()
+        sr.readModel("FSRCNN_x2.pb")  # Path to the FSRCNN model file
+        sr.setModel("fsrcnn", 2)  # Use FSRCNN with a scale factor of 2
 
-        # Process the cropped image with MediaPipe Selfie Segmentation
+        # Apply super-resolution to the cropped image
+        print("Applying super-resolution...")
+        super_res_image = sr.upsample(cropped_image)
+
+        # Convert the super-resolved image to RGB (MediaPipe requires RGB input)
+        super_res_image_rgb = cv2.cvtColor(super_res_image, cv2.COLOR_BGR2RGB)
+
+        # Process the super-resolved image with MediaPipe Selfie Segmentation
         print("Running MediaPipe Selfie Segmentation...")
-        results = selfie_segmentation.process(cropped_image_rgb)
+        results = selfie_segmentation.process(super_res_image_rgb)
 
         # Get the segmentation mask
         mask = results.segmentation_mask
@@ -114,22 +127,45 @@ def generate_biometric_photo_from_file(file_path):
 
         # Invert the mask and erode it (effectively dilating the foreground)
         inverted_mask = cv2.bitwise_not(binary_mask)
-        kernel = np.ones((11, 11), np.uint8)  # Reduced from 21x21 to 11x11
+        kernel = np.ones((kernel_size, kernel_size), np.uint8)
         eroded_inverted = cv2.erode(inverted_mask, kernel, iterations=1)
         final_mask = cv2.bitwise_not(eroded_inverted)
-        
-        # Keep strong blur for smooth transitions but reduce sigma
-        final_mask = cv2.GaussianBlur(final_mask, (41, 41), 5)  # Reduced sigma from 10 to 5
 
-        # Apply the final mask to the cropped image
-        result = cv2.bitwise_and(cropped_image, cropped_image, mask=final_mask)
+        # Apply Gaussian blur to the mask for smooth edges
+        if blur_kernel_size % 2 == 0:
+            blur_kernel_size += 1  # Ensure the kernel size is odd
+        final_mask = cv2.medianBlur(final_mask, blur_kernel_size)
+
+        # Create a gradient mask for the fade effect using distance transform
+        distance = cv2.distanceTransform(final_mask, cv2.DIST_L2, 5)
+        distance = cv2.normalize(distance, None, 0, 1, cv2.NORM_MINMAX)
+
+        # Scale the distance map by the fade_distance
+        gradient_mask = np.clip(distance * fade_distance, 0, 1)
+
+        # Apply Gaussian blur to the gradient mask for smoother transitions
+        gradient_mask = cv2.medianBlur(gradient_mask, blur_kernel_size)
+
+        # Convert the gradient mask to the range [0, 255]
+        gradient_mask = (gradient_mask * 255).astype(np.uint8)
+
+        # Apply the gradient mask to the final mask
+        final_mask = cv2.multiply(final_mask.astype(np.float32), gradient_mask.astype(np.float32) / 255).astype(np.uint8)
+
+        # Apply the final mask to the super-resolved image
+        result = cv2.bitwise_and(super_res_image, super_res_image, mask=final_mask)
 
         # Create a white background
-        white_background = np.ones_like(cropped_image) * 255
+        white_background = np.ones_like(super_res_image) * 255
 
-        # Combine the result with the white background
-        final_image = cv2.bitwise_or(white_background, white_background, mask=cv2.bitwise_not(final_mask))
-        final_image = cv2.bitwise_or(final_image, result)
+        # Invert the final mask for the background
+        inverted_final_mask = cv2.bitwise_not(final_mask)
+
+        # Apply the inverted mask to the white background
+        background = cv2.bitwise_and(white_background, white_background, mask=inverted_final_mask)
+
+        # Combine the foreground and background
+        final_image = cv2.add(result, background)
 
         # Save the processed image
         processed_filename = f"processed_{os.path.basename(file_path)}"
@@ -150,6 +186,8 @@ def generate_biometric_photo():
         return jsonify({'success': False, 'error': 'No file uploaded'}), 400
 
     file = request.files['photo']
+    kernel_size = request.form.get('kernelSize', type=int)  # Get kernel size from form data
+    blur_kernel_size = request.form.get('blurKernelSize', type=int, default=5)  # Provide a default value
 
     # Check if the file is valid
     if file.filename == '':
@@ -160,11 +198,12 @@ def generate_biometric_photo():
         filename = secure_filename(file.filename)
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         print(f"Saving uploaded file to {file_path}...")
+
         file.save(file_path)
 
         try:
-            # Generate the biometric photo
-            processed_file_path = generate_biometric_photo_from_file(file_path)
+            # Generate the biometric photo using the kernel size
+            processed_file_path = generate_biometric_photo_from_file(file_path, kernel_size, blur_kernel_size)
 
             # Return the URL of the processed image
             processed_filename = os.path.basename(processed_file_path)
